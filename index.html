@@ -476,7 +476,7 @@ function openProduct(id){
 function setupSwipe(el,total){let sx=0;el.addEventListener('touchstart',e=>{sx=e.touches[0].clientX;},{passive:true});el.addEventListener('touchend',e=>{const d=sx-e.changedTouches[0].clientX;if(Math.abs(d)>40){if(d<0&&curImgIdx<total-1)setImg(curImgIdx+1);else if(d>0&&curImgIdx>0)setImg(curImgIdx-1);}});}
 function prevImg(){if(curImgIdx>0)setImg(curImgIdx-1);}
 function nextImg(){const imgs=getImgs(curProduct);if(curImgIdx<imgs.length-1)setImg(curImgIdx+1);}
-function setImg(i){curImgIdx=i;const track=document.getElementById('strack');if(track){track.style.transform='translateX('+(-i*100)+'%)';}document.querySelectorAll('.sdot').forEach((d,j)=>d.classList.toggle('on',j===i));}
+function setImg(i){curImgIdx=i;const track=document.getElementById('strack');if(track){const w=document.getElementById('simgs').offsetWidth||window.innerWidth;track.style.transform='translateX('+(-i*w)+'px)';}document.querySelectorAll('.sdot').forEach((d,j)=>d.classList.toggle('on',j===i));}
 function pickColor(c,el){
   selColor=c;
   document.querySelectorAll('.cchip').forEach(x=>x.classList.remove('on'));
