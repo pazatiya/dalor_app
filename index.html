@@ -455,7 +455,7 @@ function openProduct(id){
   const simgsEl=document.getElementById('simgs');
   if(imgs.length>1){setupSwipe(simgsEl,imgs.length);}
   // Force layout so strack clips correctly
-  requestAnimationFrame(()=>{
+  setTimeout(()=>{
     const simgs=document.getElementById('simgs');
     const track=document.getElementById('strack');
     if(!simgs||!track)return;
@@ -466,7 +466,8 @@ function openProduct(id){
     track._W=W;
     track.style.transform='translateX(0)';
     curImgIdx=0;
-  });
+  }, 420);
+
   document.getElementById('ov').classList.add('on');
   document.getElementById('sheet').classList.add('on');
   document.body.style.overflow='hidden';
