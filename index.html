@@ -1516,8 +1516,8 @@ async function checkout(){
 
   // בניית הודעת WA עם פרטי מוצרים + session_id לבוט
   const itemsList=cart.map(i=>`• ${i.productName}${i.size?' | '+i.size:''}${i.color?' | '+i.color:''} — ₪${i.price}`).join('\n');
-  const promoLine=promo?`\n🎁 מבצע: ${promo.name} — חיסכון ₪${rawTotal-total}`:'';
-  const msg=`סיימתי לבחור 🛒 _sid:${sessionId}\n\n${itemsList}${promoLine}\n\nסה"כ: ₪${total}`;
+  const promoLine=promo?`\n🎁 מבצע: ${promo.name} — חיסכון ₪${rawTotal-total}\n`:'';
+  const msg=`סיימתי לבחור 🛒\n\n${itemsList}\n${promoLine}\nסה"כ: ₪${total}\n\n_sid:${sessionId}`;
   const waUrl=`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(msg)}`;
   const isMobile=/Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
   let waWin=null;
