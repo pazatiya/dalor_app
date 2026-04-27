@@ -59,13 +59,23 @@ DALOR מציע שירות פרימיום מותאם אישית:
 4. אל תמציא מחירים ספציפיים של פריטים בודדים
 5. אם לא בטוח — שאל במקום להמציא`;
 
-/* ── Supabase helper ── */
+/* ── Supabase helpers ── */
+const sbKey = () => process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_ANON_KEY;
+
+async function supabaseGet(query) {
+  const r = await fetch(`${process.env.SUPABASE_URL}/rest/v1/${query}`, {
+    headers: { apikey: sbKey(), Authorization: `Bearer ${sbKey()}` }
+  });
+  if (!r.ok) throw new Error(await r.text());
+  return r.json();
+}
+
 async function supabasePost(table, data) {
   const r = await fetch(`${process.env.SUPABASE_URL}/rest/v1/${table}`, {
     method: 'POST',
     headers: {
-      apikey: process.env.SUPABASE_ANON_KEY,
-      Authorization: `Bearer ${process.env.SUPABASE_ANON_KEY}`,
+      apikey: sbKey(),
+      Authorization: `Bearer ${sbKey()}`,
       'Content-Type': 'application/json',
       Prefer: 'return=minimal'
     },
@@ -140,11 +150,11 @@ app.post('/api/chat', async (req, res) => {
     let productContext = '';
     try {
       const prodResp = await fetch(
-        `${process.env.SUPABASE_URL}/rest/v1/products?active=eq.true&order=created_at.desc&limit=60&select=id,name,category,price,sale_price,sizes,colors,description`,
+        `${process.env.SUPABASE_URL}/rest/v1/products?order=created_at.desc&limit=60&select=id,name,category,price,sale_price,sizes,colors,description`,
         {
           headers: {
-            apikey: process.env.SUPABASE_ANON_KEY,
-            Authorization: `Bearer ${process.env.SUPABASE_ANON_KEY}`
+            apikey: sbKey(),
+            Authorization: `Bearer ${sbKey()}`
           }
         }
       );
@@ -207,6 +217,39 @@ app.post('/api/register-plan', async (req, res) => {
     // Don't fail — WhatsApp handles the rest
   }
   res.json({ ok: true });
+});
+
+/* ── Server-side promotions (bypasses RLS with service key) ── */
+app.get('/api/promotions', async (req, res) => {
+  try {
+    const data = await supabaseGet('promotions?order=created_at.desc&select=*');
+    res.json(data || []);
+  } catch (err) {
+    console.error('[/api/promotions]', err.message);
+    res.json([]);
+  }
+});
+
+/* ── Server-side products (bypasses RLS with service key) ── */
+app.get('/api/products', async (req, res) => {
+  try {
+    const data = await supabaseGet('products?order=created_at.desc&select=*&limit=200');
+    res.json(data || []);
+  } catch (err) {
+    console.error('[/api/products]', err.message);
+    res.json([]);
+  }
+});
+
+/* ── Server-side categories ── */
+app.get('/api/categories', async (req, res) => {
+  try {
+    const data = await supabaseGet('categories?order=sort_order.asc&select=*');
+    res.json(data || []);
+  } catch (err) {
+    console.error('[/api/categories]', err.message);
+    res.json([]);
+  }
 });
 
 app.use(express.static(__dirname));

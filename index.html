@@ -1070,16 +1070,14 @@ function setRealtimeStatus(live){
   const dot=document.getElementById('rtDot');
   if(dot)dot.classList.toggle('live',live);
 }
+async function serverGet(path){const r=await fetch(path);if(!r.ok)throw new Error(r.status);return r.json();}
+
 async function refreshData(){
   try{
-    const [data,promoDataRaw]=await Promise.all([
-      dbGet('products?status=eq.available&order=created_at.desc&select=*'),
-      dbGet('promotions?active=eq.true&order=created_at.desc&limit=10').catch(()=>[])
+    const [data,promoData]=await Promise.all([
+      serverGet('/api/products').catch(()=>dbGet('products?status=eq.available&order=created_at.desc&select=*')),
+      serverGet('/api/promotions').catch(()=>[])
     ]);
-    let promoData=promoDataRaw;
-    if(!promoData||promoData.length===0){
-      promoData=await dbGet('promotions?order=created_at.desc&limit=10').catch(()=>[]);
-    }
     const fresh=data.map(parseMeta);
     const changed=JSON.stringify(fresh.map(p=>p.id+p.price+(p.sale_price||'')))!==JSON.stringify(allProducts.map(p=>p.id+p.price+(p.sale_price||'')));
     allProducts=fresh;
@@ -1132,15 +1130,11 @@ async function init(){
   if(!navigator.onLine)document.getElementById('offlineBanner').classList.add('on');
 
   try{
-    const [data,promoDataRaw,catData]=await Promise.all([
-      dbGet('products?status=eq.available&order=created_at.desc&select=*'),
-      dbGet('promotions?active=eq.true&order=created_at.desc&limit=10').catch(()=>[]),
-      dbGet('categories?order=sort_order.asc&select=*').catch(()=>[])
+    const [data,promoData,catData]=await Promise.all([
+      serverGet('/api/products').catch(()=>dbGet('products?status=eq.available&order=created_at.desc&select=*')),
+      serverGet('/api/promotions').catch(()=>[]),
+      serverGet('/api/categories').catch(()=>dbGet('categories?order=sort_order.asc&select=*').catch(()=>[]))
     ]);
-    let promoData=promoDataRaw;
-    if(!promoData||promoData.length===0){
-      promoData=await dbGet('promotions?order=created_at.desc&limit=10').catch(()=>[]);
-    }
     allProducts=data.map(parseMeta);
     if(Array.isArray(catData)&&catData.length){
       catData.forEach(cat=>{
