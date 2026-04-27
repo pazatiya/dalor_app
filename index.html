@@ -1521,7 +1521,7 @@ async function checkout(){
     console.log('[checkout] ✅ cart saved, session_id='+sessionId);
   }catch(e){
     console.error('[checkout] ❌ cart save failed | error=',e.message,'| SUPABASE_URL=',SUPABASE_URL,'| KEY_START=',SUPABASE_ANON_KEY?.slice(0,30));
-    showToast('לא הצלחנו לשמור את ההזמנה, אבל הוואטסאפ יפתח בכל זאת');
+    showToast('שגיאה: '+e.message+' | URL:'+SUPABASE_URL?.slice(0,30));
   }
   // הבוט מחפש _sid: prefix — חייב להיות בפורמט הזה
   const msg=`סיימתי לבחור 🛒 _sid:${sessionId}`;
