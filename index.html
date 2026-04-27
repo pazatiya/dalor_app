@@ -1512,20 +1512,24 @@ async function checkout(){
   const rawTotal=cart.reduce((s,i)=>s+i.price,0);
   const promo=calcPromo();
   const total=promo?promo.newTotal:rawTotal;
-  // ודא ש-session_id קיים ב-localStorage לפני השמירה
   localStorage.setItem('dalor_session_id',sessionId);
-  console.log('[checkout] session_id=',sessionId,'total=',total,'items=',cart.length);
+
+  // פותחים חלון WA מיידית לפני ה-await — כדי לשמור את user gesture על מובייל
+  const msg=`סיימתי לבחור 🛒 _sid:${sessionId}`;
+  const waUrl=`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(msg)}`;
+  const isMobile=/Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+  let waWin=null;
+  if(!isMobile){waWin=window.open(waUrl,'_blank');}
+
   try{
-    console.log('[checkout] saving cart, SUPABASE_URL=',SUPABASE_URL,'session=',sessionId);
     await dbUpsert('web_carts',{session_id:sessionId,items:cart.map(i=>({productId:i.productId,productName:i.productName,price:i.price,size:i.size,color:i.color})),total,status:'pending',created_at:new Date().toISOString()});
     console.log('[checkout] ✅ cart saved, session_id='+sessionId);
   }catch(e){
-    console.error('[checkout] ❌ cart save failed | error=',e.message,'| SUPABASE_URL=',SUPABASE_URL,'| KEY_START=',SUPABASE_ANON_KEY?.slice(0,30));
-    showToast('שגיאה: '+e.message+' | URL:'+SUPABASE_URL?.slice(0,30));
+    console.error('[checkout] ❌',e.message,'URL=',SUPABASE_URL);
   }
-  // הבוט מחפש _sid: prefix — חייב להיות בפורמט הזה
-  const msg=`סיימתי לבחור 🛒 _sid:${sessionId}`;
-  window.open(`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(msg)}`,'_blank');
+
+  // מובייל — מנווטים בטאב הנוכחי אחרי השמירה
+  if(isMobile){window.location.href=waUrl;}
 }
 
 function showPromoScreen(){
