@@ -1219,7 +1219,8 @@ function buildPromos(promos){
 function applyAllFilters(){
   const searchQ=(document.getElementById('searchInput').value||'').trim().toLowerCase();
   const activeCat=document.querySelector('.cat-chip.active')?.dataset.cat||'all';
-  let result=allProducts;
+  // Never show sold products in the storefront
+  let result=allProducts.filter(p=>p.status!=='sold');
   if(activeCat!=='all')result=result.filter(p=>p.category===activeCat);
   if(searchQ)result=result.filter(p=>p.name.toLowerCase().includes(searchQ)||(p.description||'').toLowerCase().includes(searchQ)||catLabel(p.category).toLowerCase().includes(searchQ));
   if(activePromoFilter){
@@ -1295,19 +1296,25 @@ function renderGrid(){
     }</div>`:'';
     const isFav=favs.has(String(p.id));
     const favHtml=`<button class="fav-btn" data-id="${p.id}" onclick="toggleFav('${p.id}',event)" aria-label="מועדפים" style="${isFav?'color:#e74c3c':''}">${isFav?svgHeartFilled():svgHeartOutline()}</button>`;
-    return `<div class="card${hasPromo?' has-promo':''}" style="animation-delay:${i*.04}s" onclick="openProduct('${p.id}')">
-      <div class="card-img">
+    const isOos=p.status==='out_of_stock';
+    const oosHtml=isOos?`<div style="position:absolute;bottom:8px;right:0;left:0;text-align:center;background:rgba(0,0,0,.72);color:#C9A84C;font-size:10px;font-weight:700;letter-spacing:1px;padding:4px 0;">⚠️ אזל מהמלאי</div>`:'';
+    return `<div class="card${hasPromo?' has-promo':''}${isOos?' oos':''}" style="animation-delay:${i*.04}s${isOos?';opacity:.75':''}" onclick="openProduct('${p.id}')">
+      <div class="card-img" style="position:relative;">
         ${imgHtml}
-        ${hasSale?'<div class="sale-badge">SALE</div>':''}
+        ${hasSale&&!isOos?'<div class="sale-badge">SALE</div>':''}
         ${ribbonHtml}
         ${favHtml}
+        ${oosHtml}
       </div>
       <div class="card-body">
         <div class="card-name">${h(p.name)}</div>
         ${pillsHtml}
         <div class="card-sizes">${szTxt}</div>
         <div class="card-prices">${hasSale?`<span class="card-old">&#8362;${p.price}</span>`:''}<span class="card-price">&#8362;${price}</span></div>
-        <button class="card-add" onclick="event.stopPropagation();quickAdd('${p.id}')" aria-label="הוסף לסל">+ הוסף לסל</button>
+        ${isOos
+          ? `<button class="card-add" disabled style="opacity:.45;cursor:not-allowed;" aria-label="אזל מהמלאי">אזל מהמלאי</button>`
+          : `<button class="card-add" onclick="event.stopPropagation();quickAdd('${p.id}')" aria-label="הוסף לסל">+ הוסף לסל</button>`
+        }
       </div>
     </div>`;
   }).join('');

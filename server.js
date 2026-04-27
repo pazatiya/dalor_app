@@ -233,7 +233,8 @@ app.get('/api/promotions', async (req, res) => {
 /* ── Server-side products (bypasses RLS with service key) ── */
 app.get('/api/products', async (req, res) => {
   try {
-    const data = await supabaseGet('products?order=created_at.desc&select=*&limit=200');
+    // Return available + out_of_stock; exclude sold products from storefront
+    const data = await supabaseGet('products?status=neq.sold&order=created_at.desc&select=*&limit=200');
     res.json(data || []);
   } catch (err) {
     console.error('[/api/products]', err.message);
