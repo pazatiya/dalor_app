@@ -45,10 +45,17 @@ CREATE POLICY "anon can read own cart"
   TO anon
   USING (true);
 
--- האתר יכול גם לעדכן (נדרש ל-UPSERT עם merge-duplicates)
+-- האתר יכול לעדכן
 DROP POLICY IF EXISTS "anon can upsert carts" ON web_carts;
 CREATE POLICY "anon can upsert carts"
   ON web_carts FOR UPDATE
+  TO anon
+  USING (true);
+
+-- האתר יכול למחוק סל ישן לפני שמירה מחדש (DELETE+INSERT במקום UPSERT)
+DROP POLICY IF EXISTS "anon can delete own cart" ON web_carts;
+CREATE POLICY "anon can delete own cart"
+  ON web_carts FOR DELETE
   TO anon
   USING (true);
 

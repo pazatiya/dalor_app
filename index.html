@@ -982,9 +982,23 @@ async function dbPost(table,body){
   if(!r.ok){const txt=await r.text().catch(()=>'');throw new Error(`dbPost ${table} ${r.status}: ${txt}`);}
 }
 async function dbUpsert(table,body){
-  // UPSERT לפי session_id — מונע כפילויות אם הלקוח לוחץ פעמיים
-  const r=await fetch(`${SUPABASE_URL}/rest/v1/${table}`,{method:'POST',headers:{apikey:SUPABASE_ANON_KEY,Authorization:`Bearer ${SUPABASE_ANON_KEY}`,'Content-Type':'application/json',Prefer:'resolution=merge-duplicates,return=minimal'},body:JSON.stringify(body)});
-  if(!r.ok){const txt=await r.text().catch(()=>'');throw new Error(`dbUpsert ${table} ${r.status}: ${txt}`);}
+  // נסה INSERT ראשון — אם נכשל עם 409 (כבר קיים), DELETE ואז INSERT מחדש
+  console.log('[dbUpsert] START url=',`${SUPABASE_URL}/rest/v1/${table}`,'key=',SUPABASE_ANON_KEY?.slice(0,20));
+  const headers={apikey:SUPABASE_ANON_KEY,Authorization:`Bearer ${SUPABASE_ANON_KEY}`,'Content-Type':'application/json'};
+  const r=await fetch(`${SUPABASE_URL}/rest/v1/${table}`,{method:'POST',headers:{...headers,Prefer:'return=minimal'},body:JSON.stringify(body)});
+  if(r.ok)return;
+  const txt=await r.text().catch(()=>'');
+  console.warn('[dbUpsert] INSERT failed',r.status,txt);
+  if(r.status===409||r.status===23505||(txt&&txt.includes('duplicate'))){
+    // כבר קיים — מחק ושמור מחדש
+    const sid=body.session_id;
+    const del=await fetch(`${SUPABASE_URL}/rest/v1/${table}?session_id=eq.${encodeURIComponent(sid)}`,{method:'DELETE',headers});
+    console.log('[dbUpsert] DELETE status=',del.status);
+    const r2=await fetch(`${SUPABASE_URL}/rest/v1/${table}`,{method:'POST',headers:{...headers,Prefer:'return=minimal'},body:JSON.stringify(body)});
+    if(!r2.ok){const t2=await r2.text().catch(()=>'');throw new Error(`dbUpsert ${table} retry ${r2.status}: ${t2}`);}
+    return;
+  }
+  throw new Error(`dbUpsert ${table} ${r.status}: ${txt}`);
 }
 
 function parseMeta(p){
@@ -1502,10 +1516,11 @@ async function checkout(){
   localStorage.setItem('dalor_session_id',sessionId);
   console.log('[checkout] session_id=',sessionId,'total=',total,'items=',cart.length);
   try{
+    console.log('[checkout] saving cart, SUPABASE_URL=',SUPABASE_URL,'session=',sessionId);
     await dbUpsert('web_carts',{session_id:sessionId,items:cart.map(i=>({productId:i.productId,productName:i.productName,price:i.price,size:i.size,color:i.color})),total,status:'pending',created_at:new Date().toISOString()});
-    console.log('[checkout] cart saved to DB, session_id='+sessionId);
+    console.log('[checkout] ✅ cart saved, session_id='+sessionId);
   }catch(e){
-    console.error('[checkout] cart save failed',e);
+    console.error('[checkout] ❌ cart save failed | error=',e.message,'| SUPABASE_URL=',SUPABASE_URL,'| KEY_START=',SUPABASE_ANON_KEY?.slice(0,30));
     showToast('לא הצלחנו לשמור את ההזמנה, אבל הוואטסאפ יפתח בכל זאת');
   }
   // הבוט מחפש _sid: prefix — חייב להיות בפורמט הזה
