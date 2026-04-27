@@ -1514,8 +1514,10 @@ async function checkout(){
   const total=promo?promo.newTotal:rawTotal;
   localStorage.setItem('dalor_session_id',sessionId);
 
-  // פותחים חלון WA מיידית לפני ה-await — כדי לשמור את user gesture על מובייל
-  const msg=`סיימתי לבחור 🛒 _sid:${sessionId}`;
+  // בניית הודעת WA עם פרטי מוצרים + session_id לבוט
+  const itemsList=cart.map(i=>`• ${i.productName}${i.size?' | '+i.size:''}${i.color?' | '+i.color:''} — ₪${i.price}`).join('\n');
+  const promoLine=promo?`\n🎁 מבצע: ${promo.name} — חיסכון ₪${rawTotal-total}`:'';
+  const msg=`סיימתי לבחור 🛒 _sid:${sessionId}\n\n${itemsList}${promoLine}\n\nסה"כ: ₪${total}`;
   const waUrl=`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(msg)}`;
   const isMobile=/Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
   let waWin=null;
