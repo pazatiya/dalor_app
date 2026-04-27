@@ -981,6 +981,11 @@ async function dbPost(table,body){
   const r=await fetch(`${SUPABASE_URL}/rest/v1/${table}`,{method:'POST',headers:{apikey:SUPABASE_ANON_KEY,Authorization:`Bearer ${SUPABASE_ANON_KEY}`,'Content-Type':'application/json',Prefer:'return=minimal'},body:JSON.stringify(body)});
   if(!r.ok){const txt=await r.text().catch(()=>'');throw new Error(`dbPost ${table} ${r.status}: ${txt}`);}
 }
+async function dbUpsert(table,body){
+  // UPSERT לפי session_id — מונע כפילויות אם הלקוח לוחץ פעמיים
+  const r=await fetch(`${SUPABASE_URL}/rest/v1/${table}`,{method:'POST',headers:{apikey:SUPABASE_ANON_KEY,Authorization:`Bearer ${SUPABASE_ANON_KEY}`,'Content-Type':'application/json',Prefer:'resolution=merge-duplicates,return=minimal'},body:JSON.stringify(body)});
+  if(!r.ok){const txt=await r.text().catch(()=>'');throw new Error(`dbUpsert ${table} ${r.status}: ${txt}`);}
+}
 
 function parseMeta(p){
   const o={...p};
@@ -1493,17 +1498,19 @@ async function checkout(){
   const rawTotal=cart.reduce((s,i)=>s+i.price,0);
   const promo=calcPromo();
   const total=promo?promo.newTotal:rawTotal;
+  // ודא ש-session_id קיים ב-localStorage לפני השמירה
+  localStorage.setItem('dalor_session_id',sessionId);
   console.log('[checkout] session_id=',sessionId,'total=',total,'items=',cart.length);
   try{
-    await dbPost('web_carts',{session_id:sessionId,items:cart.map(i=>({productId:i.productId,productName:i.productName,price:i.price,size:i.size,color:i.color})),total,status:'pending',created_at:new Date().toISOString()});
-    console.log('[checkout] cart saved to DB');
+    await dbUpsert('web_carts',{session_id:sessionId,items:cart.map(i=>({productId:i.productId,productName:i.productName,price:i.price,size:i.size,color:i.color})),total,status:'pending',created_at:new Date().toISOString()});
+    console.log('[checkout] cart saved to DB, session_id='+sessionId);
   }catch(e){
     console.error('[checkout] cart save failed',e);
     showToast('לא הצלחנו לשמור את ההזמנה, אבל הוואטסאפ יפתח בכל זאת');
   }
-  const itemsList=cart.map(i=>`• ${i.productName}${i.size?' | '+i.size:''}${i.color?' | '+i.color:''} — ₪${i.price}`).join('\n');
-  const msg=`הזמנה חדשה 🛒\nמזהה: ${sessionId}\n\n${itemsList}\n\nסה"כ: ₪${total}`;
-  window.location.href=`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(msg)}`;
+  // ההודעה לבוט חייבת להכיל את ה-session_id כמחרוזת נקייה בתחילת ההודעה
+  const msg=`סיימתי לבחור 🛒 ${sessionId}`;
+  window.open(`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(msg)}`,'_blank');
 }
 
 function showPromoScreen(){
