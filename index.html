@@ -1072,10 +1072,14 @@ function setRealtimeStatus(live){
 }
 async function refreshData(){
   try{
-    const [data,promoData]=await Promise.all([
+    const [data,promoDataRaw]=await Promise.all([
       dbGet('products?status=eq.available&order=created_at.desc&select=*'),
       dbGet('promotions?active=eq.true&order=created_at.desc&limit=10').catch(()=>[])
     ]);
+    let promoData=promoDataRaw;
+    if(!promoData||promoData.length===0){
+      promoData=await dbGet('promotions?order=created_at.desc&limit=10').catch(()=>[]);
+    }
     const fresh=data.map(parseMeta);
     const changed=JSON.stringify(fresh.map(p=>p.id+p.price+(p.sale_price||'')))!==JSON.stringify(allProducts.map(p=>p.id+p.price+(p.sale_price||'')));
     allProducts=fresh;
@@ -1128,11 +1132,15 @@ async function init(){
   if(!navigator.onLine)document.getElementById('offlineBanner').classList.add('on');
 
   try{
-    const [data,promoData,catData]=await Promise.all([
+    const [data,promoDataRaw,catData]=await Promise.all([
       dbGet('products?status=eq.available&order=created_at.desc&select=*'),
       dbGet('promotions?active=eq.true&order=created_at.desc&limit=10').catch(()=>[]),
       dbGet('categories?order=sort_order.asc&select=*').catch(()=>[])
     ]);
+    let promoData=promoDataRaw;
+    if(!promoData||promoData.length===0){
+      promoData=await dbGet('promotions?order=created_at.desc&limit=10').catch(()=>[]);
+    }
     allProducts=data.map(parseMeta);
     if(Array.isArray(catData)&&catData.length){
       catData.forEach(cat=>{
@@ -1170,7 +1178,8 @@ function buildCats(){
 function buildPromos(promos){
   const now=new Date();
   const active=(promos||[]).filter(p=>{
-    if(!p.active)return false;
+    // accept p.active===true OR p.active===undefined/null (fallback fetch has no active filter)
+    if(p.active===false)return false;
     if(p.start_date&&new Date(p.start_date)>now)return false;
     if(p.end_date){const e=new Date(p.end_date.length<=10?p.end_date+'T23:59:59':p.end_date);if(e<now)return false;}
     return true;
@@ -1451,15 +1460,29 @@ function renderCart(){
     }).join('');
   }
 
-  ie.innerHTML=cart.map(i=>`<div class="citem">
+  let bundleIds=new Set();
+  if(promo){
+    const sorted=[...cart].sort((a,b)=>b.price-a.price);
+    const bundleItems=sorted.slice(0,promo.groups*promo.qty);
+    bundleItems.forEach(i=>bundleIds.add(i.id));
+  }
+  const discountedItemPrice=promo?Math.round((promo.price/promo.qty)*10)/10:null;
+
+  ie.innerHTML=cart.map(i=>{
+    const inBundle=bundleIds.has(i.id);
+    const priceHtml=inBundle&&discountedItemPrice
+      ?`<div class="citem-price"><span style="text-decoration:line-through;opacity:0.45;font-size:11px;color:var(--white-dim)">&#8362;${i.price}</span> <span style="color:var(--gold)">&#8362;${discountedItemPrice}</span></div>`
+      :`<div class="citem-price">&#8362;${i.price}</div>`;
+    return `<div class="citem">
     ${i.image?`<img class="citem-img" src="${h(i.image)}" alt="" loading="lazy" />`:`<div class="citem-img" style="display:flex;align-items:center;justify-content:center;"><span style="font-family:'Playfair Display',serif;font-size:26px;color:var(--gold-dark)">D</span></div>`}
     <div class="citem-info">
       <div class="citem-name">${h(i.productName)}</div>
       <div class="citem-meta">${h(i.size)}${i.color?' · '+h(i.color):''}</div>
-      <div class="citem-price">&#8362;${i.price}</div>
+      ${priceHtml}
     </div>
     <button class="crm" onclick="removeItem(${i.id})" aria-label="הסר מוצר">&#215;</button>
-  </div>`).join('');
+  </div>`;
+  }).join('');
 
   fe.innerHTML=`<div class="ctotal-row">
     <span class="ctotal-lbl">סה״כ</span>
@@ -1610,7 +1633,7 @@ function renderBotReply(text){
     const msgs=document.getElementById('chatMsgs');
     const btn=document.createElement('button');
     btn.className='chat-plan-btn';
-    btn.textContent='📅 הרשמה לתוכנית סטיילינג שבועית';
+    btn.textContent='הרשמה לתוכנית הסטיילינג 🎯';
     btn.onclick=openWeeklyModal;
     msgs.appendChild(btn);
     setTimeout(()=>msgs.scrollTop=msgs.scrollHeight,50);
@@ -1697,14 +1720,14 @@ async function submitWeeklyPlan(){
       body:JSON.stringify({name,phone,plan:selectedPlan})
     });
   }catch(e){}
-  const planName=selectedPlan==='weekly'?'מנוי שבועי (₪29/שבוע)':'תוכנית חד פעמית (₪49)';
-  const waMsg=`היי DALOR! 🎯\nרוצה להצטרף לתוכנית הסטיילינג:\n${planName}\nשם: ${name}\nטלפון: ${phone}`;
+  const planCode=selectedPlan==='weekly'?'WEEKLY_29':'ONETIME_49';
+  const waMsg=`#DALOR_PLAN\nסוג: ${planCode}\nשם: ${name}\nטלפון: ${phone}\n\nשלום! רוצה להצטרף לתוכנית הסטיילינג של DALOR 🎯`;
   window.open('https://wa.me/'+WA_NUMBER+'?text='+encodeURIComponent(waMsg),'_blank');
   document.getElementById('wModalBody').innerHTML=`
     <div class="wmodal-success">
       <div class="wmodal-success-icon">🎉</div>
       <div class="wmodal-success-title">נרשמת בהצלחה!</div>
-      <div class="wmodal-success-text">הוואטסאפ נפתח — שלח את ההודעה לסיום הרישום.<br>ניצור איתך קשר תוך 24 שעות 💛</div>
+      <div class="wmodal-success-text">הוואטסאפ נפתח — שלח את ההודעה לסיום ההרשמה.<br>הבוט שלנו ישלח לך קישור תשלום 💳<br>לאחר התשלום תקבל את תוכנית הסטיילינג שלך 🎯</div>
     </div>`;
   setTimeout(closeWeeklyModal,4000);
 }

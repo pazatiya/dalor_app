@@ -41,7 +41,7 @@ XXL — חזה 107–114 | מותן 91–97
 ## פלואו הסטיילינג
 כשמתחילה שיחה: הצג את עצמך בחום ושאל שאלה ראשונה (גיל).
 שאל בהדרגה: גיל → סגנון מועדף → אירוע/מצב → גזרה ומידות.
-אחרי איסוף מידע: תן ניתוח סטייל מותאם אישית + המלץ לוק מלא (חולצה + מכנסיים + נעליים + אקססוריז) מ-DALOR.
+אחרי איסוף מידע: תן ניתוח סטייל מותאם אישית + המלץ לוק מלא (חולצה + מכנסיים + נעליים + אקססוריז) מ-DALOR. ציין את שמות המוצרים המדויקים מהקטלוג.
 
 ## תוכנית סטיילינג שבועית — שירות בתשלום
 DALOR מציע שירות פרימיום מותאם אישית:
@@ -52,6 +52,7 @@ DALOR מציע שירות פרימיום מותאם אישית:
 חשוב מאוד: כשתרצה שיופיע כפתור הרשמה לתוכנית — הכנס בסוף ההודעה שלך בדיוק את הטוקן: [PLAN_BUTTON]
 
 ## עקרונות תגובה
+0. תמיד המלץ על מוצרים ספציפיים מהקטלוג הנוכחי של DALOR בשמם המלא
 1. תשובה ממוקדת + שאלה אחת — לא רשימות ארוכות
 2. אחרי כל 3-4 הודעות — הצע לעבור לשלב הבא (לוק / מידות / תוכנית)
 3. אם שואל על מחיר/זמינות פריט ספציפי — הפנה לבדוק בקטלוג האתר או לפנות בוואטסאפ
@@ -93,10 +94,20 @@ app.get('/logo-icon.png', (req, res) => {
   else res.status(404).end();
 });
 
+/* ── Chat status diagnostic endpoint ── */
+app.get('/api/chat-status', (req, res) => {
+  res.json({
+    hasKey: !!process.env.ANTHROPIC_API_KEY,
+    keyPrefix: process.env.ANTHROPIC_API_KEY ? process.env.ANTHROPIC_API_KEY.slice(0,15)+'...' : null,
+    model: 'claude-sonnet-4-5'
+  });
+});
+
 /* ── AI Chat endpoint ── */
 app.post('/api/chat', async (req, res) => {
   try {
     if (!process.env.ANTHROPIC_API_KEY) {
+      console.error('[/api/chat] ANTHROPIC_API_KEY is not set!');
       return res.json({
         reply: 'שירות הצ\'אט החכם לא זמין כרגע 😔\n<a href="https://wa.me/' +
           (process.env.OWNER_PHONE || '972507983306') +
@@ -119,10 +130,54 @@ app.post('/api/chat', async (req, res) => {
         : m.content
     }));
 
+    // Helper: strip embedded HTML meta comments from description
+    function cleanDesc(desc) {
+      if (!desc) return '';
+      return desc.replace(/<!--META:[\s\S]+?-->/g, '').trim().slice(0, 80);
+    }
+
+    // Fetch active products from Supabase to inject into system prompt
+    let productContext = '';
+    try {
+      const prodResp = await fetch(
+        `${process.env.SUPABASE_URL}/rest/v1/products?active=eq.true&order=created_at.desc&limit=60&select=id,name,category,price,sale_price,sizes,colors,description`,
+        {
+          headers: {
+            apikey: process.env.SUPABASE_ANON_KEY,
+            Authorization: `Bearer ${process.env.SUPABASE_ANON_KEY}`
+          }
+        }
+      );
+      if (prodResp.ok) {
+        const products = await prodResp.json();
+        if (products && products.length > 0) {
+          productContext = '\n\n## קטלוג המוצרים הנוכחי של DALOR\n';
+          productContext += 'המלץ על מוצרים ספציפיים מהרשימה הזו לפי הסגנון של הלקוח:\n\n';
+          products.forEach(p => {
+            const sizes = Array.isArray(p.sizes) ? p.sizes.join(', ') : (p.sizes || '');
+            const colors = Array.isArray(p.colors) ? p.colors.join(', ') : (p.colors || '');
+            const displayPrice = (p.sale_price && parseFloat(p.sale_price) < parseFloat(p.price))
+              ? `₪${p.sale_price}`
+              : (p.price ? `₪${p.price}` : '');
+            const cat = p.category || '';
+            const desc = cleanDesc(p.description);
+            productContext += `• ${p.name}${cat ? ` (${cat})` : ''}${displayPrice ? ` — ${displayPrice}` : ''}`;
+            if (sizes) productContext += ` | מידות: ${sizes}`;
+            if (colors) productContext += ` | צבעים: ${colors}`;
+            if (desc) productContext += ` — ${desc}`;
+            productContext += '\n';
+          });
+          productContext += '\nכשממליץ על לוק — ציין את שמות המוצרים המדויקים מהרשימה הזו.';
+        }
+      }
+    } catch (e) {
+      console.error('[/api/chat] product fetch failed:', e.message);
+    }
+
     const resp = await client.messages.create({
       model: 'claude-sonnet-4-5',
-      max_tokens: 800,
-      system: STYLIST_PROMPT,
+      max_tokens: 1000,
+      system: STYLIST_PROMPT + productContext,
       messages: anthropicMsgs
     });
 
@@ -143,6 +198,8 @@ app.post('/api/register-plan', async (req, res) => {
       phone,
       plan_type: plan,
       status: 'pending',
+      payment_status: 'awaiting',
+      amount: plan === 'weekly' ? 29 : 49,
       created_at: new Date().toISOString()
     });
   } catch (err) {
