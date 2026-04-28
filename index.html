@@ -1011,7 +1011,7 @@ function parseMeta(p){
   return o;
 }
 function getSizes(p){
-  if(p._size_stock&&typeof p._size_stock==='object')return Object.keys(p._size_stock).filter(s=>p._size_stock[s]===null||p._size_stock[s]===undefined||Number(p._size_stock[s])>0);
+  if(p._size_stock&&typeof p._size_stock==='object')return Object.keys(p._size_stock); // כל מידה קיימת = זמינה, רק הסרה מסתירה
   let s=p.sizes;
   if(typeof s==='string'){try{s=JSON.parse(s)}catch{s=[]}}
   return Array.isArray(s)?s:[];
