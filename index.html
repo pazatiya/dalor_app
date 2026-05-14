@@ -1349,7 +1349,7 @@ function openProduct(id){
       <div class="sprice-row">${hasSale?`<span class="sprice-old">&#8362;${p.price}</span>`:''}<span class="sprice">&#8362;${price}</span>${hasSale?'<span class="stag">SALE</span>':''}</div>
       ${promoNoticeHtml}
       <div class="sdiv"></div>${colorsHtml}${sizesHtml}${descHtml}
-      <button class="cta" onclick="addToCart()">הוסף לסל</button>
+      ${p.status==='out_of_stock'?`<button class="cta" disabled style="opacity:.45;cursor:not-allowed;">אזל מהמלאי</button>`:`<button class="cta" onclick="addToCart()">הוסף לסל</button>`}
     </div>`;
   const simgsEl=document.getElementById('simgs');
   if(imgs.length>1)setupSwipe(simgsEl,imgs.length);
@@ -1380,6 +1380,7 @@ function closeSheet(){document.getElementById('ov').classList.remove('on');docum
 
 function addToCart(){
   if(!curProduct)return;
+  if(curProduct.status==='out_of_stock'){showToast('מוצר זה אזל מהמלאי');return;}
   const p=curProduct,sizes=getSizes(p),colors=getColors(p);
   if(sizes.length>0&&!selSize){showToast('בחר מידה');return;}
   if(colors.length>1&&!selColor){showToast('בחר צבע');return;}
@@ -1391,6 +1392,7 @@ function addToCart(){
 }
 function quickAdd(id){
   const p=allProducts.find(x=>String(x.id)===String(id));if(!p)return;
+  if(p.status==='out_of_stock'){showToast('מוצר זה אזל מהמלאי');return;}
   const sizes=getSizes(p),colors=getColors(p);
   if(sizes.length>1||colors.length>1){openProduct(id);return;}
   cart.push({id:Date.now(),productId:p.id,productName:p.name,price:getPrice(p),size:sizes[0]||'אחיד',color:colors[0]||null,image:getImgs(p)[0]||null});
