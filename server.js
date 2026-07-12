@@ -8,6 +8,19 @@ const PORT = process.env.PORT || 3001;
 
 app.use(express.json({ limit: '20mb' }));
 
+/* ── CORS: allow the WordPress site (dalor.co.il) to embed the chat widget ── */
+const ALLOWED_ORIGINS = ['https://dalor.co.il', 'https://www.dalor.co.il'];
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  if (ALLOWED_ORIGINS.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  }
+  if (req.method === 'OPTIONS') return res.sendStatus(204);
+  next();
+});
+
 /* ── DALOR STYLIST SYSTEM PROMPT ── */
 const STYLIST_PROMPT = `אתה "הסטייליסט האישי של DALOR" — עוזר AI חכם ואנושי של חנות אופנה גברית יוקרתית בשם DALOR.
 
