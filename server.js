@@ -160,7 +160,7 @@ app.post('/api/chat', async (req, res) => {
     let productContext = '';
     try {
       const prodResp = await fetch(
-        `${process.env.SUPABASE_URL}/rest/v1/products?order=created_at.desc&limit=60&select=id,name,category,price,sale_price,sizes,colors,description`,
+        `${process.env.SUPABASE_URL}/rest/v1/products?status=not.in.(sold,out_of_stock)&order=created_at.desc&limit=60&select=id,name,category,price,sale_price,sizes,colors,description`,
         {
           headers: {
             apikey: sbKey(),
