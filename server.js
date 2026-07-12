@@ -43,6 +43,16 @@ XXL — חזה 107–114 | מותן 91–97
 שאל בהדרגה: גיל → סגנון מועדף → אירוע/מצב → גזרה ומידות.
 אחרי איסוף מידע: תן ניתוח סטייל מותאם אישית + המלץ לוק מלא (חולצה + מכנסיים + נעליים + אקססוריז) מ-DALOR. ציין את שמות המוצרים המדויקים מהקטלוג.
 
+## שני סוגי בקשות
+זהה מייד לאיזו פנייה מתאימה, אל תערבב פלואו:
+
+א) חיפוש פריט ספציפי ("יש לכם חולצה כחולה סלים במידה L?", "מחפש מכנסי חאקי") — תשובה קצרה ומהירה, בלי שאלון סגנון. קרא ל-show_products עם ה-id-ים המתאימים מהקטלוג שסופק לך.
+אם אין התאמה טובה — אל תקרא לכלי, אמור בכנות שלא נמצא פריט מתאים כרגע, והצע לבדוק בוואטסאפ.
+
+ב) בניית לוק / ייעוץ סטייל ("תלביש אותי לחתונה", "מה מתאים לי") — המשך בפלואו השאלות ההדרגתי הרגיל (גיל → סגנון → אירוע → מידות). כשאתה ממליץ על לוק מלא — קרא ל-show_products עם כל ה-id-ים הרלוונטיים (חולצה+מכנסיים+נעליים וכו').
+
+בשני המקרים: קרא ל-show_products רק עם id שמופיע בפועל ברשימת הקטלוג שסופקה לך למטה. אל תמציא id.
+
 ## תוכנית סטיילינג שבועית — שירות בתשלום
 DALOR מציע שירות פרימיום מותאם אישית:
 - תוכנית חד פעמית (₪49): 7 לוקים מלאים, מותאמים אישית לפרופיל הלקוח
@@ -52,7 +62,7 @@ DALOR מציע שירות פרימיום מותאם אישית:
 חשוב מאוד: כשתרצה שיופיע כפתור הרשמה לתוכנית — הכנס בסוף ההודעה שלך בדיוק את הטוקן: [PLAN_BUTTON]
 
 ## עקרונות תגובה
-0. תמיד המלץ על מוצרים ספציפיים מהקטלוג הנוכחי של DALOR בשמם המלא
+0. כשאתה ממליץ על מוצר קונקרטי — קרא תמיד ל-show_products עם ה-id הנכון, בנוסף לתיאור בטקסט
 1. תשובה ממוקדת + שאלה אחת — לא רשימות ארוכות
 2. אחרי כל 3-4 הודעות — הצע לעבור לשלב הבא (לוק / מידות / תוכנית)
 3. אם שואל על מחיר/זמינות פריט ספציפי — הפנה לבדוק בקטלוג האתר או לפנות בוואטסאפ
@@ -171,27 +181,51 @@ app.post('/api/chat', async (req, res) => {
               : (p.price ? `₪${p.price}` : '');
             const cat = p.category || '';
             const desc = cleanDesc(p.description);
-            productContext += `• ${p.name}${cat ? ` (${cat})` : ''}${displayPrice ? ` — ${displayPrice}` : ''}`;
+            productContext += `• [${p.id}] ${p.name}${cat ? ` (${cat})` : ''}${displayPrice ? ` — ${displayPrice}` : ''}`;
             if (sizes) productContext += ` | מידות: ${sizes}`;
             if (colors) productContext += ` | צבעים: ${colors}`;
             if (desc) productContext += ` — ${desc}`;
             productContext += '\n';
           });
-          productContext += '\nכשממליץ על לוק — ציין את שמות המוצרים המדויקים מהרשימה הזו.';
+          productContext += '\nכשממליץ על מוצר — קרא ל-show_products עם ה-id המדויק מהרשימה הזו.';
         }
       }
     } catch (e) {
       console.error('[/api/chat] product fetch failed:', e.message);
     }
 
+    const tools = [{
+      name: 'show_products',
+      description: 'הצג ללקוח כרטיסי מוצר לחיצים עבור פריטים ספציפיים מהקטלוג. קרא בכל פעם שממליצים או מאתרים מוצר קונקרטי — רק id שמופיע בקטלוג שסופק, לעולם לא id מומצא.',
+      input_schema: {
+        type: 'object',
+        properties: {
+          product_ids: { type: 'array', items: { type: 'string' }, description: 'רשימת ה-id המדויקים מהקטלוג' },
+          note: { type: 'string', description: 'הערה קצרה אופציונלית, למשל "הלוק המומלץ" או "מה שמצאתי"' }
+        },
+        required: ['product_ids']
+      }
+    }];
+
     const resp = await client.messages.create({
       model: 'claude-sonnet-4-5',
       max_tokens: 1000,
       system: STYLIST_PROMPT + productContext,
-      messages: anthropicMsgs
+      messages: anthropicMsgs,
+      tools
     });
 
-    res.json({ reply: resp.content[0].text });
+    let reply = '';
+    let productIds = [];
+    for (const block of resp.content) {
+      if (block.type === 'text') reply += block.text;
+      else if (block.type === 'tool_use' && block.name === 'show_products') {
+        productIds = Array.isArray(block.input?.product_ids) ? block.input.product_ids.map(String) : [];
+      }
+    }
+    if (!reply && productIds.length) reply = 'הנה מה שמצאתי:';
+
+    res.json({ reply, productIds });
   } catch (err) {
     console.error('[/api/chat]', err.message);
     res.json({ reply: 'אופס, קרתה תקלה קטנה 😔 נסה שוב בעוד רגע' });
