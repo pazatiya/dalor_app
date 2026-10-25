@@ -2,7 +2,7 @@
 <html lang="he" dir="rtl">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>DALOR</title>
   <link rel="manifest" href="/manifest.json" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -11,7 +11,7 @@
   <meta name="theme-color" content="#080808" />
   <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Playfair+Display:wght@400;500;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Playfair+Display:wght@400;500;700&family=DM+Sans:wght@300;400;500&family=Heebo:wght@300;400;500;600;700&family=Frank+Ruhl+Libre:wght@400;500;700&display=swap" rel="stylesheet" />
   <style>
     :root {
       --gold: #F0C85A;
@@ -842,6 +842,269 @@
       .card-img { aspect-ratio:3/4; }
       #chatBtn { bottom:90px; }
     }
+
+    /* ═══════════════════════════════════════════════════════════
+       REDESIGN v5 — יוקרה בשחור וזהב, קריאות ונוחות, מובייל קודם
+       (בלוק זה בא אחרון בכוונה ומעדכן את כל מה שלמעלה)
+       ═══════════════════════════════════════════════════════════ */
+    :root {
+      --white-dim:#b8ac96;
+      --white-dim2:#968b78;
+      --font-body:'Heebo','DM Sans',system-ui,-apple-system,sans-serif;
+      --font-serif:'Frank Ruhl Libre','Cormorant Garamond','Playfair Display',serif;
+      --nav-h:68px;
+      --safe-b:env(safe-area-inset-bottom,0px);
+      --maxw:1180px;
+      --gold-btn:linear-gradient(180deg,#FFE08A 0%,#F0C85A 55%,#D9A93A 100%);
+    }
+    html { overflow-x:hidden; }
+    body {
+      overflow-x:clip; /* clip ולא hidden — כדי שהמדפים הדביקים (sticky) יעבדו */
+      font-family:var(--font-body); line-height:1.5;
+      background:
+        radial-gradient(120% 360px at 50% 0%, rgba(240,200,90,.11), transparent 70%),
+        #070707;
+      background-attachment:scroll;
+    }
+    body::before, body::after { display:none; }
+    button, input, .cta, .checkout-btn, .card-add, .search-wrap input, .chat-input, .wmodal-field, .wmodal-submit {
+      font-family:var(--font-body);
+    }
+    :focus-visible { outline:2px solid var(--gold); outline-offset:2px; }
+
+    /* ── כותרת עליונה (נגללת; הסל נשאר בתפריט התחתון) ── */
+    header { position:relative; height:58px; padding:0 16px; backdrop-filter:none; -webkit-backdrop-filter:none; }
+    .hsub { font-size:9px; letter-spacing:3px; color:var(--white-dim2); }
+    .cart-btn { width:44px; height:44px; }
+    #offlineBanner { top:0; }
+
+    /* ── פתיח קטן וסרטון מותג ── */
+    .hero { min-height:0; padding:16px 16px 14px; }
+    .hero-title { font-size:clamp(26px,7.4vw,36px); letter-spacing:clamp(3px,1.4vw,7px); }
+    .hero-sub { font-size:13px; letter-spacing:2px; margin-top:6px; color:var(--white-dim); text-transform:none; }
+    .hero-divider { margin-top:10px; }
+    .video-banner-wrap { position:relative; background:#000; aspect-ratio:16/9; max-height:44vh; overflow:hidden; }
+    .video-banner-frame { width:100%; height:100%; object-fit:cover; display:block; }
+
+    /* ── סרגל סינון דביק: חיפוש, מיון וקטגוריות תמיד בהישג יד ── */
+    .filters {
+      position:sticky; top:0; z-index:90;
+      background:rgba(8,8,8,.97);
+      backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
+      border-bottom:1px solid rgba(240,200,90,.2);
+      box-shadow:0 10px 26px rgba(0,0,0,.45);
+    }
+    .filters .search-wrap, .filters .cats-wrap { max-width:var(--maxw); margin-inline:auto; border:0; background:none; }
+    .search-wrap { padding:10px 14px 4px; gap:8px; }
+    .cats-wrap { padding:6px 14px 10px; }
+    .cats-label { display:none; }
+    .search-inner { min-width:0; }
+    .search-icon { position:absolute; right:14px; top:50%; transform:translateY(-50%); color:#d9bd6a; display:flex; pointer-events:none; }
+    .search-wrap input {
+      font-size:16px; height:46px; padding:0 44px 0 16px; border-radius:23px;
+      background:#151515; border:1px solid rgba(255,255,255,.14);
+    }
+    .search-wrap input::placeholder { color:var(--white-dim2); }
+    .sort-btn {
+      height:46px; padding:0 16px; border-radius:23px; font-size:14px; letter-spacing:0; font-weight:500;
+      color:var(--white); background:#151515; border:1px solid rgba(240,200,90,.35); gap:8px;
+    }
+    .sort-btn svg { color:#d9bd6a; flex-shrink:0; }
+    .cats { gap:8px; scroll-snap-type:x proximity; padding-bottom:0; }
+    .cat-chip {
+      scroll-snap-align:start; min-height:42px; padding:6px 16px 6px 12px; gap:6px;
+      background:#151515; border:1px solid rgba(255,255,255,.14); border-radius:21px;
+    }
+    .cat-chip .ai-icon { width:26px; height:26px; border-radius:8px; margin-inline-start:0; }
+    .cat-chip span.lbl { font-size:14px; letter-spacing:0; color:#e4dac6; font-weight:500; }
+    .cat-chip.active { background:var(--gold-btn); border-color:var(--gold); }
+    .cat-chip.active span.lbl { color:#0a0a0a; font-weight:700; }
+
+    /* ── באנרים של מבצעים ── */
+    #promoBannerWrap { padding:12px 0 2px; }
+    .promo-card-name { font-family:var(--font-serif); font-size:16px; font-weight:700; }
+    .promo-card-cond { font-size:12px; }
+    .promo-card-btn { font-size:12px; letter-spacing:0; padding:6px 12px; }
+
+    /* ── רשת מוצרים: שני מוצרים בשורה בטלפון ── */
+    .grid-wrap { padding:14px 10px calc(var(--nav-h) + var(--safe-b) + 36px); scroll-margin-top:var(--filters-h,120px); }
+    .grid-header { max-width:var(--maxw); margin:0 auto; padding:0 4px 10px; }
+    .grid-count { font-size:13px; letter-spacing:0; text-transform:none; color:var(--white-dim); }
+    .promo-filter-chip { font-size:12px; padding:6px 12px; }
+    .grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
+    .skel { aspect-ratio:3/4; }
+    .card { border-radius:14px; animation-duration:.35s; }
+    .card-img { aspect-ratio:3/4; }
+    .fav-btn { width:38px; height:38px; bottom:8px; left:8px; background:rgba(0,0,0,.55); }
+    .sale-badge { top:8px; left:8px; font-size:11px; letter-spacing:1px; padding:3px 8px; }
+    .card-body { padding:10px 10px 12px; }
+    .card-name {
+      font-family:var(--font-serif); font-size:16px; font-weight:700; letter-spacing:0; line-height:1.3;
+      white-space:normal; min-height:2.6em; margin-bottom:4px;
+      display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
+    }
+    .card-sizes { font-size:12px; letter-spacing:.2px; color:var(--white-dim2); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-bottom:6px; }
+    .card-prices { margin-bottom:9px; gap:8px; }
+    .card-price { font-size:18px; font-weight:700; }
+    .card-old { font-size:13px; opacity:.7; }
+    .card-add {
+      min-height:44px; padding:8px; font-size:14px; font-weight:600; letter-spacing:0; text-transform:none;
+      color:#f3deaa; background:rgba(240,200,90,.1); border:1px solid rgba(240,200,90,.42); border-radius:12px; gap:6px;
+    }
+    .card-add .ai-icon { width:22px; height:22px; }
+    .card-add:hover, .card-add:active { color:#0a0a0a; background:var(--gold-btn); }
+    .card-add:disabled:hover { background:rgba(240,200,90,.1); color:#f3deaa; }
+    .promo-pill { font-size:11px; }
+    .card-promo-pills { display:none; } /* הסרט הזהוב בפינה כבר מציין מבצע */
+    .promo-card { min-width:200px; padding:12px 14px; }
+    .promo-card-icon { font-size:20px; margin-bottom:2px; }
+    .promo-card-cond { margin-bottom:8px; }
+    .empty p { font-size:15px; }
+    .empty .eicon { font-size:44px; }
+
+    /* ── מסך מוצר: תמונה מלאה, בחירה ברורה, כפתור הוספה דביק ── */
+    .overlay, .cov { backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); background:rgba(0,0,0,.72); }
+    .sheet { max-height:92vh; max-height:92dvh; border-radius:24px 24px 0 0; }
+    .sheet-top { position:absolute; top:0; left:0; right:0; z-index:12; padding:12px; justify-content:flex-end; pointer-events:none; }
+    .sheet-top .handle { display:none; }
+    .sheet-x { pointer-events:auto; width:42px; height:42px; background:rgba(0,0,0,.6); border-color:rgba(255,255,255,.2); color:#fff; font-size:24px; backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); }
+    .simgs { background:#e9e9e9; }
+    .strack img { aspect-ratio:4/5; max-height:58vh; }
+    .sarrow { width:40px; height:40px; background:rgba(0,0,0,.5); color:#fff; }
+    .sdots { position:absolute; bottom:10px; left:0; right:0; padding:0; z-index:5; }
+    .sdot { background:rgba(255,255,255,.55); box-shadow:0 0 0 1px rgba(0,0,0,.2); }
+    .sdot.on { background:var(--gold); }
+    .sbody { padding:18px 20px 0; }
+    .scat { font-size:13px; letter-spacing:.4px; text-transform:none; color:var(--gold-dark); color:#cdb36a; margin-bottom:4px; }
+    .sname { font-family:var(--font-serif); font-size:28px; font-weight:700; letter-spacing:0; line-height:1.2; margin-bottom:10px; }
+    .sprice { font-size:28px; font-weight:700; }
+    .sprice-old { font-size:16px; }
+    .stag { font-size:12px; padding:4px 10px; letter-spacing:1px; }
+    .slabel { font-size:14px; letter-spacing:.2px; text-transform:none; color:var(--white); font-weight:600; margin-bottom:10px; }
+    .slabel .sel-val { color:var(--gold); font-weight:500; margin-inline-start:6px; }
+    .colors-row, .sizes-row { gap:10px; margin-bottom:20px; }
+    .cchip { display:inline-flex; align-items:center; gap:8px; min-height:44px; padding:0 16px; font-size:15px; color:var(--white); border-color:rgba(255,255,255,.2); background:#141414; }
+    .cchip.on { border-color:var(--gold); color:var(--gold-light); background:rgba(240,200,90,.14); box-shadow:0 0 0 1px var(--gold) inset; }
+    .cdot { width:18px; height:18px; border-radius:50%; border:1px solid rgba(255,255,255,.4); flex-shrink:0; }
+    .schip { min-width:56px; height:48px; font-size:16px; color:var(--white); border-color:rgba(255,255,255,.2); background:#141414; }
+    .schip.on { color:#0a0a0a; font-weight:700; border-color:var(--gold); background:var(--gold-btn); }
+    .schip.out { opacity:.35; text-decoration:line-through; cursor:not-allowed; }
+    .need { animation:needShake .5s ease; border-radius:12px; box-shadow:0 0 0 2px var(--gold), 0 0 0 7px rgba(240,200,90,.16); }
+    @keyframes needShake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-6px)} 75%{transform:translateX(6px)} }
+    .sdesc { font-size:15px; line-height:1.8; color:var(--white-dim); }
+    .spromo-notice-text { font-size:14px; }
+    .cta-bar {
+      position:sticky; bottom:0; z-index:6; margin:10px -20px 0; padding:14px 20px calc(16px + var(--safe-b));
+      background:linear-gradient(180deg, rgba(8,8,8,0), rgba(8,8,8,.97) 24%);
+    }
+    .cta, .checkout-btn {
+      min-height:56px; padding:0 16px; font-size:17px; font-weight:700; letter-spacing:.3px; text-transform:none;
+      background:var(--gold-btn); border-radius:14px; color:#0a0a0a;
+    }
+    .cta:hover, .checkout-btn:hover { background:var(--gold-btn); filter:brightness(1.06); transform:none; }
+    .cta:active, .checkout-btn:active { transform:scale(.985); }
+    .cta:disabled { background:#262626; color:var(--white-dim); }
+
+    /* ── סל קניות: רשימה נגללת, סיכום וכפתור תמיד בתחתית ── */
+    .csheet { display:flex; flex-direction:column; max-height:88vh; max-height:88dvh; overflow:hidden; }
+    .csheet .handle { flex-shrink:0; }
+    .cheader, #savingsBannerSlot, #promoProgressSlot { flex-shrink:0; }
+    .cheader { padding:16px 20px 8px; }
+    .ctitle { font-family:var(--font-serif); font-size:28px; font-weight:700; letter-spacing:0; }
+    .ctitle-count { font-size:15px; }
+    .cxbtn { width:42px; height:42px; font-size:24px; color:var(--white); }
+    .citems { flex:1 1 auto; overflow-y:auto; -webkit-overflow-scrolling:touch; min-height:90px; padding:4px 16px; }
+    .citem { gap:14px; padding:14px 0; align-items:center; }
+    .citem-img { width:76px; height:96px; }
+    .citem-name { font-family:var(--font-serif); font-size:17px; font-weight:700; letter-spacing:0; margin-bottom:4px; }
+    .citem-meta { font-size:14px; letter-spacing:0; color:var(--white-dim); margin-bottom:6px; }
+    .citem-price { font-size:16px; font-weight:600; }
+    .crm { align-self:center; width:40px; height:40px; border-radius:50%; background:rgba(255,255,255,.07); color:var(--white); opacity:1; font-size:22px; display:flex; align-items:center; justify-content:center; padding:0; flex-shrink:0; }
+    .crm:hover { background:rgba(231,76,60,.25); }
+    .cempty p { font-size:16px; }
+    .cempty-cta { min-height:46px; padding:0 30px; font-size:15px; letter-spacing:0; background:var(--gold-btn); }
+    .cfooter { flex-shrink:0; padding:14px 16px calc(16px + var(--safe-b)); background:#0b0b0b; }
+    .ctotal-lbl { font-size:15px; letter-spacing:0; text-transform:none; color:var(--white); }
+    .ctotal-amt { font-size:34px; font-weight:700; font-family:var(--font-serif); }
+    .savings-banner-name { font-size:14px; }
+    .promo-progress-label { font-size:13px; }
+    .checkout-btn svg { flex-shrink:0; }
+
+    /* ── תפריט תחתון ── */
+    .bnav { height:calc(var(--nav-h) + var(--safe-b)); padding-bottom:var(--safe-b); background:rgba(6,6,6,.97); }
+    .bnav-tab { min-height:var(--nav-h); }
+    .bnav-lbl { font-size:12px; letter-spacing:0; color:#d8ccb4; }
+    .bnav-badge { width:18px; height:18px; font-size:11px; right:calc(50% - 18px); top:6px; }
+    .badge { width:20px; height:20px; font-size:11px; }
+
+    /* ── בועת הסטייליסט: קטנה, ולא מכסה כפתורים ── */
+    #chatBtn { width:52px; height:52px; border-radius:16px; bottom:calc(var(--nav-h) + var(--safe-b) + 12px); left:auto; right:12px; z-index:140; }
+    #chatWin { bottom:calc(var(--nav-h) + var(--safe-b) + 74px); max-height:min(460px,64vh); }
+    .chat-msg { font-size:15px; }
+    .chat-chip { font-size:13px; padding:8px 14px; }
+    .chat-input, .wmodal-field { font-size:16px; }
+    .chat-header-title { font-size:17px; }
+
+    /* ── הודעה קופצת: למעלה, כדי שלא תכסה כפתורים ── */
+    .toast {
+      top:14px; bottom:auto; transform:translateX(-50%) translateY(-14px);
+      font-size:15px; letter-spacing:0; text-transform:none; padding:12px 22px; max-width:90vw;
+      background:var(--gold-btn); box-shadow:0 8px 28px rgba(0,0,0,.55);
+    }
+    .toast.on { transform:translateX(-50%) translateY(0); }
+
+    /* ── מיון, מבצעים, מועדפים ── */
+    .sort-sheet { padding:20px 18px calc(24px + var(--safe-b)); }
+    .sort-sheet-title { font-size:15px; letter-spacing:0; text-transform:none; color:var(--white); font-weight:600; }
+    .sort-opt { min-height:52px; font-size:16px; }
+    .pscreen-title, .me-title { font-family:var(--font-serif); font-size:24px; font-weight:700; letter-spacing:0; }
+    .pscreen-promo-name { font-family:var(--font-serif); font-size:20px; font-weight:700; }
+    .pscreen-promo-cond { font-size:14px; }
+    .pscreen-filter-btn { font-size:13px; letter-spacing:0; padding:9px 16px; }
+    .pscreen-prod-thumb-name { font-size:12px; }
+    .pscreen-x { width:42px; height:42px; }
+    .me-favs-label { font-size:14px; letter-spacing:0; text-transform:none; }
+    #meScreen, #promoScreen { padding-bottom:calc(24px + var(--safe-b)); }
+
+    @media (min-width:600px) {
+      .grid { grid-template-columns:repeat(3,minmax(0,1fr)); gap:16px; }
+      .card-name { font-size:17px; }
+    }
+    @media (min-width:760px) {
+      .hero { min-height:0; padding:30px 24px 26px; }
+      .video-banner-wrap { aspect-ratio:21/8; max-height:440px; }
+      .filters .cats-wrap, .filters .search-wrap, .grid-wrap { padding-left:24px; padding-right:24px; }
+      .card-img { aspect-ratio:3/4; }
+    }
+    @media (min-width:900px) {
+      .grid { grid-template-columns:repeat(4,minmax(0,1fr)); gap:20px; }
+      .card-body { padding:12px 14px 14px; }
+      .card-promo-pills { display:flex; }
+      .filters .search-wrap { padding-top:12px; }
+      /* מסך מוצר כחלון במרכז: תמונה בצד אחד, פרטים בצד שני */
+      .sheet {
+        left:0; right:0; top:0; bottom:0; margin:auto; height:fit-content;
+        width:min(1000px,92vw); max-height:88vh; border-radius:24px; border:1px solid rgba(240,200,90,.25);
+        transform:translateY(24px); opacity:0; visibility:hidden;
+        transition:transform .3s cubic-bezier(.32,.72,0,1), opacity .25s, visibility .25s;
+      }
+      .sheet.on { transform:translateY(0); opacity:1; visibility:visible; }
+      .sheet-scroll { display:grid; grid-template-columns:minmax(0,1.05fr) minmax(0,1fr); overflow:hidden; max-height:88vh; }
+      .simgs { align-self:start; }
+      .strack img { aspect-ratio:4/5; max-height:88vh; }
+      .sbody { max-height:88vh; overflow-y:auto; padding:34px 30px 0; }
+      .sname { font-size:32px; }
+      .sheet-top { padding:14px; }
+      /* סל ומיון כלוח צר במרכז */
+      .csheet, .sort-sheet { left:0; right:0; margin:0 auto; width:min(520px,94vw); }
+      .bnav { left:0; right:0; margin:0 auto; bottom:14px; width:min(520px,92vw); border-radius:22px; border:1px solid rgba(240,200,90,.3); overflow:hidden; }
+      #chatBtn { bottom:24px; right:24px; }
+      #chatWin { left:auto; right:24px; width:380px; bottom:90px; }
+      .grid-wrap { padding-bottom:120px; }
+    }
+    @media (prefers-reduced-motion:reduce) {
+      *, *::before, *::after { animation-duration:.01ms !important; animation-iteration-count:1 !important; transition-duration:.01ms !important; }
+    }
   </style>
 </head>
 <body>
@@ -892,7 +1155,7 @@
 
 <!-- Video Banner -->
 <div class="video-banner-wrap">
-  <video class="video-banner-frame" controls autoplay muted loop playsinline preload="auto">
+  <video class="video-banner-frame" poster="assets/dalor-promo-poster.jpg" autoplay muted loop playsinline disablepictureinpicture preload="metadata" aria-label="סרטון DALOR">
     <source src="assets/dalor-promo.mp4" type="video/mp4" />
   </video>
 </div>
@@ -901,6 +1164,17 @@
   <div class="promo-banner-scroll" id="promoBannerScroll"></div>
 </div>
 
+<div class="filters" id="filters">
+<div class="search-wrap">
+  <div class="search-inner">
+    <span class="search-icon" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg></span>
+    <input type="search" placeholder="חפש מוצר..." id="searchInput" oninput="onSearchDebounced(this.value)" aria-label="חיפוש מוצרים" />
+  </div>
+  <button class="sort-btn" id="sortBtn" onclick="openSortSheet()" aria-label="מיין">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg>
+    מיון
+  </button>
+</div>
 <div class="cats-wrap">
   <div class="cats-label">קטגוריות</div>
   <div class="cats" id="catsBar">
@@ -909,16 +1183,6 @@
     </button>
   </div>
 </div>
-
-<div class="search-wrap">
-  <div class="search-inner">
-    <span class="search-icon ai-icon ai-icon-search" aria-hidden="true"></span>
-    <input type="search" placeholder="חפש מוצר..." id="searchInput" oninput="onSearchDebounced(this.value)" aria-label="חיפוש מוצרים" />
-  </div>
-  <button class="sort-btn" id="sortBtn" onclick="openSortSheet()" aria-label="מיין">
-    <span class="ai-icon ai-icon-sort" aria-hidden="true"></span>
-    מיון
-  </button>
 </div>
 
 <div class="grid-wrap">
@@ -1123,6 +1387,7 @@ const CAT_MAP={
   accessories:{lbl:'אקססוריז',emo:'🕶️'}, jackets:{lbl:"ז'קטים",emo:'🧥'},
   bags:{lbl:'תיקים',emo:'👜'}, sale:{lbl:'מבצע',emo:'🔥'},
   grooming:{lbl:'טיפוח',emo:'✦'},
+  suits:{lbl:'חליפות',emo:'🧥'}, 'halbashah-tahtona':{lbl:'הלבשה תחתונה',emo:'🩲'},
 };
 let catNameMap={};
 
@@ -1205,6 +1470,10 @@ function parseMeta(p){
     if(m){try{const x=JSON.parse(m[1]);Object.assign(o,{_images:o._images||x._images,_colors:o._colors||x._colors,_size_stock:o._size_stock||x._size_stock});}catch{}}
     o.description=o.description.replace(/\n?<!--META:[\s\S]+?-->/,'').trim();
   }
+  // עמודות מקוריות שמגיעות מ-DALOR STOCK — משמשות רק כשאין להן מקבילה ב-META
+  if(!(Array.isArray(o._images)&&o._images.length)&&Array.isArray(o.images)&&o.images.length)o._images=o.images;
+  if(!(Array.isArray(o._colors)&&o._colors.length)&&Array.isArray(o.colors)&&o.colors.length)o._colors=o.colors;
+  if(!(o._size_stock&&typeof o._size_stock==='object'&&Object.keys(o._size_stock).length)&&o.size_stock&&typeof o.size_stock==='object'&&!Array.isArray(o.size_stock)&&Object.keys(o.size_stock).length){o._size_stock=o.size_stock;o._stock_native=true;}
   return o;
 }
 function getSizes(p){
@@ -1228,6 +1497,12 @@ function getImgs(p){
   }
   if(!imgs.length&&p.image_url&&p.image_url.startsWith('http'))imgs=[p.image_url];
   return imgs;
+}
+function sizeOut(p,s){return !!(p._stock_native&&p._size_stock&&Number(p._size_stock[s])===0);}
+function colorHex(p,name){
+  const m=p.color_hex_map;
+  const v=m&&typeof m==='object'?m[name]:null;
+  return typeof v==='string'&&/^#[0-9a-f]{3,8}$/i.test(v.trim())?v.trim():null;
 }
 function getPrice(p){return p.sale_price&&parseFloat(p.sale_price)<parseFloat(p.price)?parseFloat(p.sale_price):parseFloat(p.price);}
 function h(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
@@ -1445,11 +1720,21 @@ function sortProducts(arr){
 function filterCat(cat,el){
   document.querySelectorAll('.cat-chip').forEach(b=>b.classList.remove('active'));
   el.classList.add('active');
+  el.scrollIntoView({inline:'center',block:'nearest',behavior:'smooth'});
   filtered=applyAllFilters();
   renderGrid();
+  scrollToGridTop();
+}
+function syncFiltersH(){
+  const f=document.getElementById('filters');
+  if(f)document.documentElement.style.setProperty('--filters-h',(f.offsetHeight+8)+'px');
+}
+function scrollToGridTop(){
+  const gw=document.querySelector('.grid-wrap');
+  if(gw&&gw.getBoundingClientRect().top<0)gw.scrollIntoView({behavior:'smooth',block:'start'});
 }
 let searchTimer=null;
-function onSearchDebounced(v){clearTimeout(searchTimer);searchTimer=setTimeout(()=>{filtered=applyAllFilters();renderGrid();},250);}
+function onSearchDebounced(v){clearTimeout(searchTimer);searchTimer=setTimeout(()=>{filtered=applyAllFilters();renderGrid();scrollToGridTop();},250);}
 function filterByPromo(promoId){
   activePromoFilter=promoId;
   filtered=applyAllFilters();
@@ -1473,6 +1758,7 @@ function setSort(sort,el){
   filtered=applyAllFilters();
   renderGrid();
   closeSortSheet();
+  scrollToGridTop();
 }
 
 function renderGrid(){
@@ -1497,7 +1783,7 @@ function renderGrid(){
     const favHtml=`<button class="fav-btn" data-id="${p.id}" onclick="toggleFav('${p.id}',event)" aria-label="מועדפים" style="${isFav?'color:#e74c3c':''}">${isFav?svgHeartFilled():svgHeartOutline()}</button>`;
     const isOos=p.status==='out_of_stock';
     const oosHtml=isOos?`<div style="position:absolute;bottom:8px;right:0;left:0;text-align:center;background:rgba(0,0,0,.72);color:#C9A84C;font-size:10px;font-weight:700;letter-spacing:1px;padding:4px 0;">⚠️ אזל מהמלאי</div>`:'';
-    return `<div class="card${hasPromo?' has-promo':''}${isOos?' oos':''}" style="animation-delay:${i*.04}s${isOos?';opacity:.75':''}" onclick="openProduct('${p.id}')">
+    return `<div class="card${hasPromo?' has-promo':''}${isOos?' oos':''}" style="animation-delay:${Math.min(i,8)*.04}s${isOos?';opacity:.75':''}" onclick="openProduct('${p.id}')">
       <div class="card-img" style="position:relative;">
         ${imgHtml}
         ${hasSale&&!isOos?'<div class="sale-badge">SALE</div>':''}
@@ -1522,14 +1808,15 @@ function renderGrid(){
 function openProduct(id){
   curProduct=allProducts.find(p=>String(p.id)===String(id));
   if(!curProduct)return;
+  if(chatOpen)toggleChat();
   curImgIdx=0; selColor=null; selSize=null;
   const p=curProduct,imgs=getImgs(p),sizes=getSizes(p),colors=getColors(p);
   const hasSale=p.sale_price&&parseFloat(p.sale_price)<parseFloat(p.price),price=getPrice(p);
   const imgHtml=imgs.map(u=>`<img src="${h(u)}" alt="${h(p.name)}" />`).join('')||
     `<div style="aspect-ratio:4/3;background:#1a1a1a;display:flex;align-items:center;justify-content:center;"><span style="font-family:'Playfair Display',serif;font-size:72px;color:var(--gold-dark);opacity:.25">D</span></div>`;
   const dotsHtml=imgs.length>1?imgs.map((_,i)=>`<div class="sdot${i===0?' on':''}" id="d${i}"></div>`).join(''):'';
-  const colorsHtml=colors.length?`<div class="slabel">צבע</div><div class="colors-row">${colors.map(c=>`<div class="cchip" onclick="pickColor('${h(c)}',this)">${h(c)}</div>`).join('')}</div>`:'';
-  const sizesHtml=sizes.length?`<div class="slabel">מידה</div><div class="sizes-row">${sizes.map(s=>`<div class="schip" onclick="pickSize('${h(s)}',this)">${h(s)}</div>`).join('')}</div>`:'';
+  const colorsHtml=colors.length?`<div class="slabel">צבע<span class="sel-val" id="selColorLbl"></span></div><div class="colors-row" id="colorsRow">${colors.map(c=>{const hx=colorHex(p,c);return `<div class="cchip" role="button" tabindex="0" onclick="pickColor('${h(c)}',this)">${hx?`<span class="cdot" style="background:${hx}"></span>`:''}${h(c)}</div>`;}).join('')}</div>`:'';
+  const sizesHtml=sizes.length?`<div class="slabel">מידה<span class="sel-val" id="selSizeLbl"></span></div><div class="sizes-row" id="sizesRow">${sizes.map(s=>sizeOut(p,s)?`<div class="schip out" aria-disabled="true" title="אזל">${h(s)}</div>`:`<div class="schip" role="button" tabindex="0" onclick="pickSize('${h(s)}',this)">${h(s)}</div>`).join('')}</div>`:'';
   const descHtml=p.description?`<div class="sdesc">${h(p.description)}</div>`:'';
   const pPromos=getProductPromos(p);
   const promoNoticeHtml=pPromos.length?`<div class="spromo-notice">
@@ -1548,7 +1835,7 @@ function openProduct(id){
       <div class="sprice-row">${hasSale?`<span class="sprice-old">&#8362;${p.price}</span>`:''}<span class="sprice">&#8362;${price}</span>${hasSale?'<span class="stag">SALE</span>':''}</div>
       ${promoNoticeHtml}
       <div class="sdiv"></div>${colorsHtml}${sizesHtml}${descHtml}
-      ${p.status==='out_of_stock'?`<button class="cta" disabled style="opacity:.45;cursor:not-allowed;">${aiIcon('sale')} אזל מהמלאי</button>`:`<button class="cta" onclick="addToCart()">${aiIcon('cart')} הוסף לסל</button>`}
+      <div class="cta-bar">${p.status==='out_of_stock'?`<button class="cta" disabled style="opacity:.45;cursor:not-allowed;">${aiIcon('sale')} אזל מהמלאי</button>`:`<button class="cta" onclick="addToCart()">${aiIcon('cart')} הוסף לסל · &#8362;${price}</button>`}</div>
     </div>`;
   const simgsEl=document.getElementById('simgs');
   if(imgs.length>1)setupSwipe(simgsEl,imgs.length);
@@ -1568,21 +1855,28 @@ function setImg(i){curImgIdx=i;document.getElementById('strack').style.transform
 function pickColor(c,el){
   selColor=c;
   document.querySelectorAll('.cchip').forEach(x=>x.classList.remove('on'));el.classList.add('on');
+  const cl=document.getElementById('selColorLbl');if(cl)cl.textContent=c;
   if(curProduct?._images&&Array.isArray(curProduct._images)){
     const idx=curProduct._images.findIndex(img=>{const ic=typeof img==='string'?'':typeof img?.color==='string'?img.color:String(img?.color?.name||img?.color||'');return String(ic||'').trim()===String(c||'').trim();});
     if(idx>=0){setImg(idx);return;}
   }
   if(curProduct&&Array.isArray(curProduct._colors)){const cIdx=curProduct._colors.findIndex(col=>String(typeof col==='string'?col:col.name||col.color||'').trim()===String(c||'').trim());if(cIdx>=0)setImg(cIdx);}
 }
-function pickSize(s,el){selSize=s;document.querySelectorAll('.schip').forEach(x=>x.classList.remove('on'));el.classList.add('on');}
+function pickSize(s,el){selSize=s;document.querySelectorAll('.schip').forEach(x=>x.classList.remove('on'));el.classList.add('on');const l=document.getElementById('selSizeLbl');if(l)l.textContent=s;}
 function closeSheet(){document.getElementById('ov').classList.remove('on');document.getElementById('sheet').classList.remove('on');document.body.style.overflow='';selColor=null;selSize=null;hideBottomNav(false);}
 
+function flashNeed(id){
+  const el=document.getElementById(id);if(!el)return;
+  el.scrollIntoView({behavior:'smooth',block:'center'});
+  el.classList.remove('need');void el.offsetWidth;el.classList.add('need');
+  setTimeout(()=>el.classList.remove('need'),1400);
+}
 function addToCart(){
   if(!curProduct)return;
   if(curProduct.status==='out_of_stock'){showToast('מוצר זה אזל מהמלאי');return;}
   const p=curProduct,sizes=getSizes(p),colors=getColors(p);
-  if(sizes.length>0&&!selSize){showToast('בחר מידה');return;}
-  if(colors.length>1&&!selColor){showToast('בחר צבע');return;}
+  if(sizes.length>0&&!selSize){showToast('בחר מידה');flashNeed('sizesRow');return;}
+  if(colors.length>1&&!selColor){showToast('בחר צבע');flashNeed('colorsRow');return;}
   const size=selSize||(sizes.length===1?sizes[0]:'אחיד');
   const color=selColor||(colors.length===1?colors[0]:null);
   cart.push({id:Date.now(),productId:p.id,productName:p.name,price:getPrice(p),size,color,image:getImgs(p)[0]||null});
@@ -1593,7 +1887,7 @@ function quickAdd(id){
   const p=allProducts.find(x=>String(x.id)===String(id));if(!p)return;
   if(p.status==='out_of_stock'){showToast('מוצר זה אזל מהמלאי');return;}
   const sizes=getSizes(p),colors=getColors(p);
-  if(sizes.length>1||colors.length>1){openProduct(id);return;}
+  if(sizes.length>1||colors.length>1||(sizes.length===1&&sizeOut(p,sizes[0]))){openProduct(id);return;}
   cart.push({id:Date.now(),productId:p.id,productName:p.name,price:getPrice(p),size:sizes[0]||'אחיד',color:colors[0]||null,image:getImgs(p)[0]||null});
   saveCart(); updateBadge(); showToast('נוסף לסל ✓');
   if(navigator.vibrate)navigator.vibrate(10);
@@ -1698,7 +1992,7 @@ function renderCart(){
     ${i.image?`<img class="citem-img" src="${h(i.image)}" alt="" loading="lazy" />`:`<div class="citem-img" style="display:flex;align-items:center;justify-content:center;"><span style="font-family:'Playfair Display',serif;font-size:26px;color:var(--gold-dark)">D</span></div>`}
     <div class="citem-info">
       <div class="citem-name">${h(i.productName)}</div>
-      <div class="citem-meta">${h(i.size)}${i.color?' · '+h(i.color):''}</div>
+      <div class="citem-meta">${i.size==='אחיד'?'מידה אחידה':'מידה '+h(i.size)}${i.color?' · '+h(i.color):''}</div>
       ${priceHtml}
     </div>
     <button class="crm" onclick="removeItem(${i.id})" aria-label="הסר מוצר">&#215;</button>
@@ -1710,7 +2004,7 @@ function renderCart(){
     <span>${promo?`<span class="ctotal-old">&#8362;${rawTotal}</span>`:''}<span class="ctotal-amt">&#8362;${finalTotal}</span></span>
   </div>
   <button class="checkout-btn" onclick="checkout()">
-    ${aiIcon('chat')}
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.47 14.38c-.3-.15-1.76-.87-2.03-.97-.27-.1-.47-.15-.67.15-.2.3-.77.97-.94 1.16-.17.2-.35.22-.64.07-.3-.15-1.26-.46-2.4-1.48-.88-.79-1.48-1.76-1.65-2.06-.17-.3-.02-.46.13-.6.13-.14.3-.35.45-.52.15-.17.2-.3.3-.5.1-.2.05-.37-.03-.52-.07-.15-.67-1.61-.92-2.2-.24-.58-.49-.5-.67-.51h-.57c-.2 0-.52.07-.8.37-.27.3-1.04 1.02-1.04 2.48s1.07 2.88 1.22 3.07c.15.2 2.1 3.2 5.08 4.49.71.3 1.26.49 1.7.63.71.23 1.36.2 1.87.12.57-.08 1.76-.72 2-1.41.25-.7.25-1.29.17-1.41-.07-.12-.27-.2-.57-.35zM12.05 21.79h-.01a9.87 9.87 0 0 1-5.03-1.38l-.36-.21-3.74.98 1-3.65-.24-.37a9.86 9.86 0 0 1-1.51-5.26C2.16 6.45 6.6 2 12.05 2c2.64 0 5.12 1.03 6.99 2.9a9.83 9.83 0 0 1 2.89 6.99c0 5.45-4.44 9.9-9.88 9.9zM20.46 3.49A11.82 11.82 0 0 0 12.05 0C5.5 0 .16 5.34.16 11.89c0 2.1.55 4.14 1.59 5.95L.06 24l6.3-1.65a11.88 11.88 0 0 0 5.68 1.45h.01c6.55 0 11.89-5.34 11.89-11.89 0-3.18-1.24-6.17-3.48-8.42z"/></svg>
     סיים הזמנה בוואטסאפ
   </button>`;
 }
@@ -1812,7 +2106,7 @@ function renderFavScreen(){
     const hasSale=p.sale_price&&parseFloat(p.sale_price)<parseFloat(p.price);
     const szTxt=sizes.length?sizes.slice(0,4).join(' · '):'מידה אחידה';
     const imgHtml=imgs[0]?`<img src="${h(imgs[0])}" alt="${h(p.name)}" loading="lazy" />`:`<div class="no-img"><span>D</span></div>`;
-    return `<div class="card" style="animation-delay:${i*.04}s" onclick="openProduct('${p.id}')">
+    return `<div class="card" style="animation-delay:${Math.min(i,8)*.04}s" onclick="openProduct('${p.id}')">
       <div class="card-img">${imgHtml}<button class="fav-btn" data-id="${p.id}" onclick="toggleFav('${p.id}',event);renderFavScreen()" aria-label="הסר ממועדפים" style="color:#e74c3c">${svgHeartFilled()}</button></div>
       <div class="card-body"><div class="card-name">${h(p.name)}</div><div class="card-sizes">${szTxt}</div>
       <div class="card-prices">${hasSale?`<span class="card-old">&#8362;${p.price}</span>`:''}<span class="card-price">&#8362;${price}</span></div>
@@ -1987,6 +2281,8 @@ let tt;
 function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('on');clearTimeout(tt);tt=setTimeout(()=>t.classList.remove('on'),2300);}
 
 document.getElementById('collYear').textContent=String(new Date().getFullYear()).slice(-2);
+syncFiltersH();window.addEventListener('resize',syncFiltersH);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(syncFiltersH);
 init();
 </script>
 </body>
