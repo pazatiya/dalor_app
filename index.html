@@ -961,6 +961,11 @@
     .promo-card-cond { margin-bottom:8px; }
     .empty p { font-size:15px; }
     .empty .eicon { font-size:44px; }
+    .empty-store { padding:56px 24px 40px; }
+    .empty-mark { width:76px; height:76px; margin:0 auto 18px; border-radius:50%; border:1px solid var(--gold-line); display:flex; align-items:center; justify-content:center; font-family:'Playfair Display',serif; font-size:38px; color:var(--gold); box-shadow:0 0 40px rgba(240,200,90,.14); }
+    .empty-store h3 { font-family:var(--font-serif); font-size:26px; font-weight:700; color:var(--gold-light); margin-bottom:10px; }
+    .empty-store p { line-height:1.8; max-width:320px; margin:0 auto 22px; }
+    .empty-cta { display:inline-flex; align-items:center; justify-content:center; min-height:50px; padding:0 30px; border-radius:25px; background:var(--gold-btn); color:#0a0a0a; font-weight:700; font-size:16px; text-decoration:none; }
 
     /* ── מסך מוצר: תמונה מלאה, בחירה ברורה, כפתור הוספה דביק ── */
     .overlay, .cov { backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); background:rgba(0,0,0,.72); }
@@ -1764,7 +1769,14 @@ function setSort(sort,el){
 function renderGrid(){
   const g=document.getElementById('grid');
   document.getElementById('gridCount').textContent=filtered.length+' פריטים';
-  if(!filtered.length){g.innerHTML='<div class="empty"><div class="eicon">🔍</div><p>לא נמצאו מוצרים</p></div>';return;}
+  if(!filtered.length){
+    if(!allProducts.length){
+      document.getElementById('gridCount').textContent='';
+      g.innerHTML=`<div class="empty empty-store"><div class="empty-mark">D</div><h3>הקולקציה החדשה בדרך</h3><p>אנחנו מעדכנים את החנות. בקרוב יעלו כאן פריטים חדשים.<br>רוצים לדעת ראשונים? כתבו לנו בוואטסאפ.</p><a class="empty-cta" href="https://wa.me/${WA_NUMBER}" target="_blank" rel="noopener">כתבו לנו בוואטסאפ</a></div>`;
+      return;
+    }
+    g.innerHTML='<div class="empty"><div class="eicon">🔍</div><p>לא נמצאו מוצרים</p></div>';return;
+  }
   g.innerHTML=filtered.map((p,i)=>{
     const imgs=getImgs(p),sizes=getSizes(p);
     const hasSale=p.sale_price&&parseFloat(p.sale_price)<parseFloat(p.price);
