@@ -131,7 +131,6 @@ app.get('/logo-icon.png', (req, res) => {
 app.get('/api/chat-status', (req, res) => {
   res.json({
     hasKey: !!process.env.ANTHROPIC_API_KEY,
-    keyPrefix: process.env.ANTHROPIC_API_KEY ? process.env.ANTHROPIC_API_KEY.slice(0,15)+'...' : null,
     model: 'claude-sonnet-4-5'
   });
 });
