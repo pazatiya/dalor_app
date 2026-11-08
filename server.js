@@ -269,7 +269,13 @@ app.post('/api/register-plan', async (req, res) => {
 app.get('/api/promotions', async (req, res) => {
   try {
     const data = await supabaseGet('promotions?order=created_at.desc&select=*');
-    res.json(data || []);
+    // רק מבצעי "כמות במחיר חבילה" מוצגים בקטלוג. הנחות באחוזים/שקלים וקופונים (עם קוד) מחושבים בבוט,
+    // והקודים אינם נחשפים לציבור.
+    const bundles = (data || []).filter((p) => !p.kind || p.kind === 'bundle').map((p) => {
+      const { code, percent, amount, min_order, max_uses, uses, ...pub } = p;
+      return pub;
+    });
+    res.json(bundles);
   } catch (err) {
     console.error('[/api/promotions]', err.message);
     res.json([]);
