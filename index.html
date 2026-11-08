@@ -1662,6 +1662,7 @@ function buildCats(){
 function buildPromos(promos){
   const now=new Date();
   const active=(promos||[]).filter(p=>{
+    if(p.kind&&p.kind!=='bundle')return false; /* הנחות באחוזים וקופונים מחושבים בבוט */
     // accept p.active===true OR p.active===undefined/null (fallback fetch has no active filter)
     if(p.active===false)return false;
     if(p.start_date&&new Date(p.start_date)>now)return false;
